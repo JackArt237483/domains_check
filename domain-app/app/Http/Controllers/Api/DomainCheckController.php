@@ -15,12 +15,6 @@ class DomainCheckController extends Controller
         $this->middleware('auth:sanctum');
     }
 
-    /**
-     * Проверяет доступность доменов из запроса.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function check(Request $request)
     {
         try {
@@ -28,15 +22,11 @@ class DomainCheckController extends Controller
                 'domains' => 'required|string',
             ]);
 
-            // Разбиваем входные данные (запятая или новая строка)
-            $domains = array_filter(
-                array_map('trim', explode(',', str_replace("\n", ',', $request->input('domains'))))
-            );
+            $domains = preg_split('/[\n,]+/', $request->input('domains'));
+            $domains = array_filter(array_map('trim', $domains));
 
-            // Проверка доменов
             $results = $this->domainChecker->checkDomains($domains);
 
-            // Формируем JSON-ответ
             return response()->json(
                 array_map(fn($result) => $result->toArray(), $results)
             );

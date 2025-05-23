@@ -9,7 +9,7 @@ Route::middleware('auth:sanctum')->get('/user', function () {
     return Auth::user();
 });
 
-Route::middleware('auth:sanctum')->get('/domains/check', [DomainCheckController::class, 'check']);
+Route::middleware('auth:sanctum')->post('/domains/check', [DomainCheckController::class, 'check']);
 
 Route::post('/login', function (Request $request) {
     $credentials = $request->only('email', 'password');

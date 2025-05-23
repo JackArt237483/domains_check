@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+
 use Illuminate\Support\ServiceProvider;
 use App\Services\DomainCheckerService;
 
@@ -12,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(Domain::class, fn() => new DomainCheckerService());
+        $this->app->singleton(DomainCheckerService::class, fn(): DomainCheckerService => new DomainCheckerService());
     }
 
     /**

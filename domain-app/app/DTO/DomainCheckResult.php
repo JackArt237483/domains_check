@@ -4,14 +4,15 @@ namespace App\DTO;
 class DomainCheckResult {
     public function __construct(
         public string $domain,
-        public bool $isAvailable,
+        public ?bool $isAvailable,
         public ?string $expiresAt = null
     ){}
+
     public function toArray(): array
     {
         return [
             'domain' => $this->domain,
-            'is_registered' => $this->isAvailable,
+            'is_available' => $this->isAvailable,
             'expires_at' => $this->expiresAt,
         ];
     }

@@ -1,67 +1,92 @@
-<!-- frontend/src/components/DomainChecker.vue -->
 <template>
-    <div class="max-w-2xl mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-4">Проверка доступности доменов</h1>
+  <div class="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <div class="w-full max-w-3xl bg-white rounded-3xl shadow-2xl p-8 space-y-8">
+      <h1 class="text-3xl font-extrabold text-center text-gray-800">🔍 Проверка доступности доменов</h1>
 
-        <div v-if="!isAuthenticated" class="text-red-500 mb-4">
-            <p>Введите email и пароль:</p>
-            <input v-model="email" placeholder="Email" class="border p-2 w-full mb-2" />
-            <input v-model="password" type="password" placeholder="Пароль" class="border p-2 w-full mb-2" />
-            <button @click="login" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Войти</button>
+      <!-- AUTH -->
+      <div v-if="!isAuthenticated" class="space-y-6">
+        <p class="text-center text-red-500 font-medium">Введите email и пароль для входа</p>
+        <input
+          v-model="email"
+          placeholder="Email"
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none transition"
+        />
+        <input
+          v-model="password"
+          type="password"
+          placeholder="Пароль"
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none transition"
+        />
+        <button
+          @click="login"
+          class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold transition"
+        >
+          Войти
+        </button>
+      </div>
+
+      <!-- DOMAIN FORM -->
+      <form v-else @submit.prevent="checkDomains" class="space-y-6">
+        <label class="block text-gray-700 font-semibold">
+          Введите список доменов:
+        </label>
+        <textarea
+          v-model="domains"
+          rows="4"
+          placeholder="example.com, test.org"
+          class="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none resize-none transition"
+        ></textarea>
+        <button
+          type="submit"
+          :disabled="isLoading"
+          class="w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white py-3 rounded-xl font-bold transition"
+        >
+          {{ isLoading ? '⏳ Проверка...' : '🚀 Проверить домены' }}
+        </button>
+      </form>
+
+      <!-- ERROR -->
+      <div v-if="error" class="text-center text-red-600 font-semibold">
+        {{ error }}
+      </div>
+
+      <!-- LOADING SPINNER -->
+      <div v-if="isLoading" class="flex justify-center mt-6">
+        <div class="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+
+      <!-- RESULTS -->
+      <div v-if="results.length" class="mt-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">📋 Результаты:</h2>
+        <div class="overflow-auto rounded-xl border border-gray-200">
+          <table class="w-full table-auto">
+            <thead class="bg-gray-100 text-gray-700 text-sm uppercase tracking-wide">
+              <tr>
+                <th class="px-6 py-3 text-left">Домен</th>
+                <th class="px-6 py-3 text-left">Статус</th>
+                <th class="px-6 py-3 text-left">Истекает</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 text-gray-800">
+              <tr v-for="result in results" :key="result.domain" class="hover:bg-gray-50 transition">
+                <td class="px-6 py-3 font-medium">{{ result.domain }}</td>
+                <td class="px-6 py-3">
+                  <span
+                    :class="result.is_available ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'"
+                  >
+                    {{ result.is_available ? '✅ Доступен' : '❌ Занят' }}
+                  </span>
+                </td>
+                <td class="px-6 py-3">{{ result.expires_at || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-
-        <form v-else @submit.prevent="checkDomains">
-            <div class="mb-4">
-                <label for="domains" class="block text-sm font-medium text-gray-700">Домены</label>
-                <textarea
-                    v-model="domains"
-                    id="domains"
-                    class="w-full p-2 border rounded-md focus:ring focus:ring-blue-200"
-                    rows="5"
-                    placeholder="example.com, test.org"
-                ></textarea>
-            </div>
-
-            <button
-                type="submit"
-                :disabled="isLoading"
-                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
-            >
-                {{ isLoading ? 'Проверка...' : 'Проверить' }}
-            </button>
-        </form>
-
-        <div v-if="error" class="mt-4 text-red-500">{{ error }}</div>
-
-        <div v-if="isLoading" class="flex justify-center mt-4">
-            <div class="animate-spin h-5 w-5 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-        </div>
-
-        <div v-if="results.length" class="mt-6">
-            <h2 class="text-lg font-semibold">Результаты</h2>
-            <table class="w-full mt-2 border">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="p-2 text-left">Домен</th>
-                        <th class="p-2 text-left">Статус</th>
-                        <th class="p-2 text-left">Истекает</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="result in results" :key="result.domain">
-                        <td class="p-2">{{ result.domain }}</td>
-                        <td class="p-2">
-                            <span :class="result.is_available ? 'text-green-500' : 'text-red-500'">
-                                {{ result.is_available ? 'Доступен' : 'Занят' }}
-                            </span>
-                        </td>
-                        <td class="p-2">{{ result.expires_at || '-' }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+      </div>
     </div>
+  </div>
 </template>
+
 
 <script>
 import axios from 'axios';
